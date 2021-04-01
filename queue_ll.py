@@ -57,6 +57,7 @@ class Queue(object):
     def __init__(self):
         """Initialize queue."""
 
+        # self.items = LinkedList()
         self.items = LinkedList()
 
     def __repr__(self):
