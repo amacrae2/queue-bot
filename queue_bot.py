@@ -1,6 +1,7 @@
 from slackclient import SlackClient
 import os, time
 from slackqueue import SlackQueue
+import random
 
 
 _QUEUE = SlackQueue()
@@ -16,6 +17,7 @@ def run_bot_update_queue(sc, channel_name):
     # to make sure staff are the only ones who can manage the queue.
 
     # Read messages forever!
+    names = set()
     while True:
 
         latest = sc.rtm_read()
@@ -33,15 +35,36 @@ def run_bot_update_queue(sc, channel_name):
                 text = latest["text"]
                 print "Latest:", latest
 
-                _QUEUE.update(text)
+                # _QUEUE.update(text)
 
-            if _QUEUE.needs_message:
-                sc.rtm_send_message(
-                    channel_id,
-                    _QUEUE.generate_display()
-                )
+                # Add a new student to the queue. Staff should still have to do
+                # this manually.
+                if "!add" in text.lower():
 
-                _QUEUE.needs_message = False
+                    names.add(' '.join(text.split()[1:]))
+
+                # # A user could be allowed to remove themselves.
+                # elif "!remove" in text.lower():
+                #     # user_to_remove = re.search(r"<@\w+>", text).group()
+                #     names.remove(' '.join(text.split()[1:]))
+
+                elif "!next" in text.lower():
+                    # user_to_remove = re.search(r"<@\w+>", text).group()
+
+                    names.remove(random.sample(names, 1)[0])
+                    value = names.pop(' '.join(text.split()[1:]))
+                    sc.rtm_send_message(
+                        channel_id,
+                        value
+                    )
+
+            # if _QUEUE.needs_message:
+            #     sc.rtm_send_message(
+            #         channel_id,
+            #         _QUEUE.generate_display()
+            #     )
+
+                # _QUEUE.needs_message = False
 
         time.sleep(.5)
 
@@ -53,8 +76,12 @@ if __name__ == "__main__":
     slack_token = os.environ.get("BOT_API_TOKEN")
     sc = SlackClient(slack_token)
 
+    # Connect to slack
+    if not sc.rtm_connect():
+        raise Exception("Couldn't connect to slack.")
+
     # Try to connect to the real time messaging service
     if sc.rtm_connect():
-        run_bot_update_queue(sc, "help")
+        run_bot_update_queue(sc, "celebrity-fishbowl")
     else:
         print "Connection Failed"

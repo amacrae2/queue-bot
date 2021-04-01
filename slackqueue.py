@@ -118,15 +118,17 @@ class SlackQueue(Queue):
 
         # Add a new student to the queue. Staff should still have to do
         # this manually.
-        elif "queue.enqueue" in text.lower():
+        elif "!add" in text.lower():
 
             # Use regex to find all user handles in the message, using Slack's
             # standard format for referring to users: <@the-user's-id> (the id
             # is *not* the user's handle).
 
-            users_to_enqueue = re.findall(r"<@\w+>", text)
-            while users_to_enqueue:
-                self.enqueue(users_to_enqueue.pop())
+            # users_to_enqueue = re.findall(r"<@\w+>", text)
+            # while users_to_enqueue:
+            #     self.enqueue(users_to_enqueue.pop())
+
+            self.enqueue(' '.join(text.split()[1:]))
 
         # A staff member should still say "on my way" before
         # dequeuing, but they can dequeue instead of manually re-typing
@@ -136,9 +138,13 @@ class SlackQueue(Queue):
             self.dequeue()
 
         # A user could be allowed to remove themselves.
-        elif "queue.remove" in text.lower():
-            user_to_remove = re.search(r"<@\w+>", text).group()
-            self.items.remove(user_to_remove)
+        elif "!remove" in text.lower():
+            # user_to_remove = re.search(r"<@\w+>", text).group()
+            self.items.remove(' '.join(text.split()[1:]))
+
+        elif "!pick" in text.lower():
+            # user_to_remove = re.search(r"<@\w+>", text).group()
+            self.items.remove(' '.join(text.split()[1:]))
 
         # Let the queue start accepting users.
         elif "queue.open" in text.lower():
